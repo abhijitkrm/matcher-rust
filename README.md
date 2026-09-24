@@ -6,8 +6,7 @@
 [![license](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 
 Deterministic, zero-allocation FIFO limit order book and matching engine core —
-measured at up to **~19M orders/sec** on Apple M1 (single-threaded, see
-`spec/BENCH.md`).
+measured at up to **~19M orders/sec** (see `spec/BENCH.md`).
 
 Single-writer book per symbol, commands in, monotonically sequenced events out —
 the same shape as real exchange matchers (CME Globex, Nasdaq INET). All I/O
