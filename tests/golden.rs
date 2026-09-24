@@ -20,8 +20,9 @@ fn parse_side(v: &serde_json::Value) -> Side {
     }
 }
 
-fn parse_cmd(v: &serde_json::Value) -> Command {
-    match v["cmd"].as_str().unwrap() {
+fn parse_cmd(v: &serde_json::Value) -> (Symbol, Command) {
+    let sym = v["symbol"].as_u64().unwrap_or(0) as Symbol;
+    let cmd = match v["cmd"].as_str().unwrap() {
         "new" => Command::New {
             order_id: v["order_id"].as_u64().unwrap(),
             side: parse_side(&v["side"]),
@@ -49,7 +50,8 @@ fn parse_cmd(v: &serde_json::Value) -> Command {
             qty: v["qty"].as_u64().unwrap(),
         },
         c => panic!("bad cmd {c}"),
-    }
+    };
+    (sym, cmd)
 }
 
 struct Header {
@@ -57,6 +59,7 @@ struct Header {
     pmax: i64,
     max_orders: usize,
     index: String,
+    engine: bool,
 }
 
 fn parse_header(line: &str) -> Header {
@@ -66,6 +69,7 @@ fn parse_header(line: &str) -> Header {
         pmax: v["pmax"].as_i64().unwrap(),
         max_orders: v["max_orders"].as_u64().unwrap_or(65_536) as usize,
         index: v["index"].as_str().unwrap_or("ladder").to_string(),
+        engine: v["engine"].as_bool().unwrap_or(false),
     }
 }
 
@@ -74,19 +78,39 @@ fn run(cmd_path: &Path, kind: IndexKind) -> (Vec<String>, String) {
     let text = fs::read_to_string(cmd_path).unwrap();
     let mut lines = text.lines();
     let header = parse_header(lines.next().unwrap());
-    let mut book = OrderBook::new(BookConfig {
+    let cfg = BookConfig {
         price_min: header.pmin,
         price_max: header.pmax,
         max_orders: header.max_orders,
         index: kind,
-    });
+    };
+    if header.engine {
+        let mut eng = Engine::new(cfg);
+        let mut out: Vec<String> = Vec::new();
+        for line in lines {
+            if line.trim().is_empty() {
+                continue;
+            }
+            let v: serde_json::Value = serde_json::from_str(line).unwrap();
+            let (sym, cmd) = parse_cmd(&v);
+            eng.submit_tagged(sym, cmd, &mut |s, seq, ev| {
+                out.push(Event::canonical_sym(seq, s, ev));
+            });
+        }
+        #[cfg(debug_assertions)]
+        for (_, book) in eng.books_iter() {
+            book.check_invariants();
+        }
+        return (out, header.index);
+    }
+    let mut book = OrderBook::new(cfg);
     let mut sink = LinesSink::new();
     for line in lines {
         if line.trim().is_empty() {
             continue;
         }
         let v: serde_json::Value = serde_json::from_str(line).unwrap();
-        book.apply(parse_cmd(&v), &mut sink);
+        book.apply(parse_cmd(&v).1, &mut sink);
     }
     #[cfg(debug_assertions)]
     book.check_invariants();

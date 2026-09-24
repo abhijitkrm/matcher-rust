@@ -251,6 +251,16 @@ impl Event {
     /// Append this event's canonical JSON line (SCHEMA.md) to `out`,
     /// without the trailing newline.
     pub fn write_canonical(seq: u64, ev: &Event, out: &mut String) {
+        Event::write_inner(seq, "", ev, out);
+    }
+
+    /// Canonical line for `engine:true` vectors: `"symbol":N` after `ev`.
+    pub fn write_canonical_sym(seq: u64, sym: Symbol, ev: &Event, out: &mut String) {
+        let sym_field = format!(",\"symbol\":{sym}");
+        Event::write_inner(seq, &sym_field, ev, out);
+    }
+
+    fn write_inner(seq: u64, sym_field: &str, ev: &Event, out: &mut String) {
         match *ev {
             Event::Accepted {
                 order_id,
@@ -259,8 +269,8 @@ impl Event {
                 let _ = fmt::Write::write_fmt(
                     out,
                     format_args!(
-                        "{{\"seq\":{},\"ev\":\"accepted\",\"order_id\":{},\"leaves_qty\":{}}}",
-                        seq, order_id, leaves_qty
+                        "{{\"seq\":{},\"ev\":\"accepted\"{},\"order_id\":{},\"leaves_qty\":{}}}",
+                        seq, sym_field, order_id, leaves_qty
                     ),
                 );
             }
@@ -268,8 +278,9 @@ impl Event {
                 let _ = fmt::Write::write_fmt(
                     out,
                     format_args!(
-                        "{{\"seq\":{},\"ev\":\"rejected\",\"order_id\":{},\"reason\":\"{}\"}}",
+                        "{{\"seq\":{},\"ev\":\"rejected\"{},\"order_id\":{},\"reason\":\"{}\"}}",
                         seq,
+                        sym_field,
                         order_id,
                         reason.as_str()
                     ),
@@ -284,8 +295,8 @@ impl Event {
                 let _ = fmt::Write::write_fmt(
                     out,
                     format_args!(
-                        "{{\"seq\":{},\"ev\":\"trade\",\"maker\":{},\"taker\":{},\"price\":{},\"qty\":{}}}",
-                        seq, maker, taker, price, qty
+                        "{{\"seq\":{},\"ev\":\"trade\"{},\"maker\":{},\"taker\":{},\"price\":{},\"qty\":{}}}",
+                        seq, sym_field, maker, taker, price, qty
                     ),
                 );
             }
@@ -293,8 +304,9 @@ impl Event {
                 let _ = fmt::Write::write_fmt(
                     out,
                     format_args!(
-                        "{{\"seq\":{},\"ev\":\"closed\",\"order_id\":{},\"reason\":\"{}\"}}",
+                        "{{\"seq\":{},\"ev\":\"closed\"{},\"order_id\":{},\"reason\":\"{}\"}}",
                         seq,
+                        sym_field,
                         order_id,
                         reason.as_str()
                     ),
@@ -308,8 +320,8 @@ impl Event {
                 let _ = fmt::Write::write_fmt(
                     out,
                     format_args!(
-                        "{{\"seq\":{},\"ev\":\"replaced\",\"order_id\":{},\"price\":{},\"qty\":{}}}",
-                        seq, order_id, price, qty
+                        "{{\"seq\":{},\"ev\":\"replaced\"{},\"order_id\":{},\"price\":{},\"qty\":{}}}",
+                        seq, sym_field, order_id, price, qty
                     ),
                 );
             }
@@ -319,6 +331,12 @@ impl Event {
     pub fn canonical(seq: u64, ev: &Event) -> String {
         let mut s = String::with_capacity(96);
         Event::write_canonical(seq, ev, &mut s);
+        s
+    }
+
+    pub fn canonical_sym(seq: u64, sym: Symbol, ev: &Event) -> String {
+        let mut s = String::with_capacity(96);
+        Event::write_canonical_sym(seq, sym, ev, &mut s);
         s
     }
 

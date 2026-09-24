@@ -30,6 +30,11 @@ impl Engine {
         self.books.get(&sym)
     }
 
+    /// Iterate all live `(symbol, book)` pairs (unordered).
+    pub fn books_iter(&self) -> impl Iterator<Item = (Symbol, &OrderBook)> + '_ {
+        self.books.iter().map(|(s, b)| (*s, b))
+    }
+
     pub fn book_mut(&mut self, sym: Symbol) -> Option<&mut OrderBook> {
         self.books.get_mut(&sym)
     }
