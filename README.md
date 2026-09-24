@@ -5,7 +5,9 @@
 [![docs.rs](https://docs.rs/matcher/badge.svg)](https://docs.rs/matcher)
 [![license](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 
-Deterministic, zero-allocation FIFO limit order book and matching engine core.
+Deterministic, zero-allocation FIFO limit order book and matching engine core —
+measured at up to **~19M orders/sec** on Apple M1 (single-threaded, see
+`spec/BENCH.md`).
 
 Single-writer book per symbol, commands in, monotonically sequenced events out —
 the same shape as real exchange matchers (CME Globex, Nasdaq INET). All I/O
@@ -39,10 +41,8 @@ matcher = "0.1"
 - Pooled orders, intrusive FIFO price levels, bitmap ladder index
   (O(1) best-price) with `BTreeMap` fallback for unbounded prices
 - Thin multi-symbol `Engine` router
-- Deterministic event streams — byte-identical to the sibling
-  [Go](https://github.com/abhijitkrm/matcher-go) and
-  [C++](https://github.com/abhijitkrm/matcher-cpp) implementations, verified
-  against the shared golden vector corpus (`vectors/`)
+- Deterministic event streams — verified byte-identically against the shared
+  golden vector corpus (`vectors/`)
 
 ## Layout
 
