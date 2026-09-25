@@ -20,6 +20,11 @@ impl Engine {
         }
     }
 
+    /// The config given to lazily-created books.
+    pub fn default_cfg(&self) -> BookConfig {
+        self.default_cfg
+    }
+
     /// Register a symbol with its own config (else first `submit` creates it
     /// with the engine default).
     pub fn add_symbol(&mut self, sym: Symbol, cfg: BookConfig) {

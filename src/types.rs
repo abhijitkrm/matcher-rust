@@ -132,6 +132,19 @@ impl Command {
     /// Canonical command line (SCHEMA.md) appended to `out`, no newline.
     /// Inverse of the vector-file parser used by the golden harnesses.
     pub fn write_canonical(&self, out: &mut String) {
+        self.write_inner(None, out);
+    }
+
+    /// Engine-journal variant: `"symbol":N` after `"cmd"`.
+    pub fn write_canonical_sym(&self, sym: Symbol, out: &mut String) {
+        self.write_inner(Some(sym), out);
+    }
+
+    fn write_inner(&self, sym: Option<Symbol>, out: &mut String) {
+        let mut sf = String::new();
+        if let Some(s) = sym {
+            let _ = fmt::Write::write_fmt(&mut sf, format_args!(",\"symbol\":{s}"));
+        }
         match *self {
             Command::New {
                 order_id,
@@ -144,7 +157,8 @@ impl Command {
                 let _ = fmt::Write::write_fmt(
                     out,
                     format_args!(
-                        "{{\"cmd\":\"new\",\"order_id\":{},\"side\":\"{}\",\"otype\":\"{}\",\"price\":{},\"qty\":{},\"tif\":\"{}\"}}",
+                        "{{\"cmd\":\"new\"{},\"order_id\":{},\"side\":\"{}\",\"otype\":\"{}\",\"price\":{},\"qty\":{},\"tif\":\"{}\"}}",
+                        sf,
                         order_id,
                         side.as_str(),
                         otype.as_str(),
@@ -157,7 +171,7 @@ impl Command {
             Command::Cancel { order_id } => {
                 let _ = fmt::Write::write_fmt(
                     out,
-                    format_args!("{{\"cmd\":\"cancel\",\"order_id\":{}}}", order_id),
+                    format_args!("{{\"cmd\":\"cancel\"{},\"order_id\":{}}}", sf, order_id),
                 );
             }
             Command::Replace {
@@ -168,8 +182,8 @@ impl Command {
                 let _ = fmt::Write::write_fmt(
                     out,
                     format_args!(
-                        "{{\"cmd\":\"replace\",\"order_id\":{},\"price\":{},\"qty\":{}}}",
-                        order_id, price, qty
+                        "{{\"cmd\":\"replace\"{},\"order_id\":{},\"price\":{},\"qty\":{}}}",
+                        sf, order_id, price, qty
                     ),
                 );
             }
@@ -375,6 +389,17 @@ impl Event {
                 .wrapping_add(qty),
         }
     }
+}
+
+/// A resting order as persisted by a snapshot (JOURNAL.md §3). `qty` is the
+/// leaves quantity; `otype` is always `Limit` (only limits can rest).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct RestingOrder {
+    pub order_id: OrderId,
+    pub side: Side,
+    pub tif: Tif,
+    pub price: Price,
+    pub qty: Qty,
 }
 
 /// Which price-index implementation backs a book side.

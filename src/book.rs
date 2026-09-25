@@ -120,7 +120,7 @@ impl OrderBook {
                 },
             );
         } else if otype == OType::Limit && matches!(tif, Tif::Gtc | Tif::PostOnly) {
-            self.rest(order_id, side, price, remaining);
+            self.rest(order_id, side, price, remaining, tif);
             self.emit(
                 sink,
                 Event::Accepted {
@@ -340,13 +340,14 @@ impl OrderBook {
 
     /// Insert a resting order (pool slot guaranteed available by the
     /// `book_full` check at ingest).
-    fn rest(&mut self, order_id: OrderId, side: Side, price: Price, qty: Qty) {
+    fn rest(&mut self, order_id: OrderId, side: Side, price: Price, qty: Qty, tif: Tif) {
         let idx = self.pool.alloc().expect("slot reserved by book_full check");
         *self.pool.get_mut(idx) = Order {
             id: order_id,
             side,
             price,
             qty,
+            tif,
             prev: NIL,
             next: NIL,
         };
@@ -404,6 +405,45 @@ impl OrderBook {
     #[inline]
     fn reject<S: Sink>(&mut self, sink: &mut S, order_id: OrderId, reason: RejectReason) {
         self.emit(sink, Event::Rejected { order_id, reason });
+    }
+
+    // ---- snapshot (JOURNAL.md §3) ------------------------------------------
+
+    /// Resting orders in book order: bids best-price-first, asks
+    /// best-price-first, FIFO within each level — insertion in this order
+    /// reproduces exact FIFO position.
+    pub fn resting_orders(&self) -> Vec<RestingOrder> {
+        let mut out = Vec::with_capacity(self.map.len());
+        for idx in [&self.bids, &self.asks] {
+            for (price, _) in idx.depth(usize::MAX) {
+                let lvl = idx.level(price).expect("depth level exists");
+                let mut i = lvl.head;
+                while i != NIL {
+                    let o = self.pool.get(i);
+                    out.push(RestingOrder {
+                        order_id: o.id,
+                        side: o.side,
+                        tif: o.tif,
+                        price: o.price,
+                        qty: o.qty,
+                    });
+                    i = o.next;
+                }
+            }
+        }
+        out
+    }
+
+    /// Rebuild a book from snapshot state: orders inserted directly as
+    /// resting, in file order (a correct book is never crossed).
+    pub fn restore(cfg: BookConfig, seq: u64, orders: &[RestingOrder]) -> OrderBook {
+        let mut b = OrderBook::new(cfg);
+        b.seq = seq;
+        for o in orders {
+            debug_assert!(b.map.get(o.order_id).is_none());
+            b.rest(o.order_id, o.side, o.price, o.qty, o.tif);
+        }
+        b
     }
 
     // ---- query API (SPEC §8) ---------------------------------------------

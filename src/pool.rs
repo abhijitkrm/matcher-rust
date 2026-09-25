@@ -2,7 +2,7 @@
 //! preallocated up to `max_orders`; steady-state matching performs zero
 //! heap allocation.
 
-use crate::types::{OrderId, Price, Qty, Side};
+use crate::types::{OrderId, Price, Qty, Side, Tif};
 
 /// Sentinel link value ("null index").
 pub const NIL: u32 = u32::MAX;
@@ -13,6 +13,7 @@ pub struct Order {
     pub side: Side,
     pub price: Price,
     pub qty: Qty,
+    pub tif: Tif,
     pub prev: u32,
     pub next: u32,
 }
@@ -60,6 +61,7 @@ impl Pool {
                 price: 0,
                 qty: 0,
                 prev: NIL,
+                tif: Tif::Gtc,
                 next: NIL,
             });
             self.live += 1;

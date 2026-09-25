@@ -9,7 +9,9 @@ use matcher::jsonflat::{get_str, parse_command, parse_header};
 use matcher::*;
 
 fn main() {
-    let path = std::env::args().nth(1).expect("usage: matcherfuzz <cmd.jsonl>");
+    let path = std::env::args()
+        .nth(1)
+        .expect("usage: matcherfuzz <cmd.jsonl>");
     let text = std::fs::read_to_string(&path).unwrap();
     let mut lines = text.lines();
     let header_line = lines.next().unwrap();

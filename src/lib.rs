@@ -35,8 +35,10 @@ mod pool;
 mod sink;
 mod types;
 
+pub mod journal;
 #[doc(hidden)]
 pub mod jsonflat;
+pub mod snapshot;
 
 pub use book::{OrderBook, OrderInfo};
 pub use engine::Engine;

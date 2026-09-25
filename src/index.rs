@@ -47,6 +47,15 @@ impl PriceIndex {
         }
     }
 
+    /// Existing level at `price` (read-only).
+    #[inline]
+    pub fn level(&self, price: Price) -> Option<&Level> {
+        match self {
+            PriceIndex::Ladder(l) => l.level(price),
+            PriceIndex::Tree(t) => t.map.get(&price),
+        }
+    }
+
     /// Get-or-create the level at `price` for a resting insert.
     #[inline]
     pub fn level_insert(&mut self, price: Price) -> &mut Level {
@@ -134,6 +143,12 @@ impl LadderIndex {
     pub fn level_mut(&mut self, price: Price) -> Option<&mut Level> {
         let i = self.idx(price);
         self.levels.get_mut(i).filter(|l| !l.is_empty())
+    }
+
+    #[inline]
+    pub fn level(&self, price: Price) -> Option<&Level> {
+        let i = self.idx(price);
+        self.levels.get(i).filter(|l| !l.is_empty())
     }
 
     /// Level for insert: sets the occupancy bit (idempotent — caller is about
