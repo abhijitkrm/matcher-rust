@@ -57,7 +57,7 @@ tools/     vectorgen — deterministic workload generator
 ## Test & bench
 
 ```bash
-cargo test                  # unit tests + 41 golden vectors + doctest
+cargo test                  # unit tests + 43 golden vectors + doctest
 cargo test --release
 REGEN=1 cargo test          # regenerate vectors/*.evt.jsonl (auditing only)
 
