@@ -1,6 +1,6 @@
 [package]
 name = "matcher"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.74"
 description = "Deterministic, zero-allocation FIFO limit order book and matching engine core — up to ~19M orders/sec"
