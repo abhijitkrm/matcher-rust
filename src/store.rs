@@ -184,7 +184,7 @@ impl Store {
     }
 
     /// Append a resting order at the back of `lvl`; returns its loc.
-    #[inline]
+    #[inline(always)]
     pub fn push(
         &mut self,
         lvl: &mut Level,
@@ -217,7 +217,7 @@ impl Store {
     }
 
     /// Remove a live order from anywhere in `lvl`.
-    #[inline]
+    #[inline(always)]
     pub fn unlink(&mut self, lvl: &mut Level, loc: u32) {
         let c = loc_chunk(loc);
         let ch = &mut self.chunks[c];

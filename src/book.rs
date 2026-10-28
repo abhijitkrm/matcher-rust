@@ -68,7 +68,7 @@ impl OrderBook {
     }
 
     /// Apply one command, emitting its event stream through `sink`.
-    #[inline]
+    #[inline(always)]
     pub fn apply<S: Sink>(&mut self, cmd: Command, sink: &mut S) {
         match cmd {
             Command::New {
@@ -118,7 +118,7 @@ impl OrderBook {
     // ---- commands --------------------------------------------------------
 
     #[allow(clippy::too_many_arguments)]
-    #[inline]
+    #[inline(always)]
     fn new_order<S: Sink>(
         &mut self,
         order_id: OrderId,
@@ -188,7 +188,7 @@ impl OrderBook {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     fn cancel<S: Sink>(&mut self, order_id: OrderId, sink: &mut S) {
         let Some(loc) = self.map.get(order_id) else {
             return self.reject(sink, order_id, RejectReason::UnknownOrderId);
@@ -215,7 +215,7 @@ impl OrderBook {
         );
     }
 
-    #[inline]
+    #[inline(always)]
     fn replace<S: Sink>(&mut self, order_id: OrderId, price: Price, qty: Qty, sink: &mut S) {
         // SPEC §4.3: unknown -> invalid_qty -> invalid_price.
         let Some(mslot) = self.map.find(order_id) else {
@@ -306,7 +306,7 @@ impl OrderBook {
 
     /// Aggressive walk of the opposite side. `bound = None` means market
     /// (match all available depth). Mutates `*qty` down to what is left.
-    #[inline]
+    #[inline(always)]
     fn cross<S: Sink>(
         &mut self,
         side: Side,
@@ -404,7 +404,7 @@ impl OrderBook {
 
     /// Insert a resting order (capacity guaranteed by the `book_full` check
     /// at ingest).
-    #[inline]
+    #[inline(always)]
     fn rest(&mut self, order_id: OrderId, side: Side, price: Price, qty: Qty, tif: Tif) {
         let own = match side {
             Side::Bid => &mut self.bids,
@@ -522,13 +522,13 @@ impl OrderBook {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     fn emit<S: Sink>(&mut self, sink: &mut S, ev: Event) {
         self.seq += 1;
         sink.on_event(self.seq, &ev);
     }
 
-    #[inline]
+    #[inline(always)]
     fn reject<S: Sink>(&mut self, sink: &mut S, order_id: OrderId, reason: RejectReason) {
         self.emit(sink, Event::Rejected { order_id, reason });
     }

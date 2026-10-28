@@ -110,7 +110,7 @@ impl OrderMap {
     }
 
     /// Insert; returns old value if the key existed.
-    #[inline]
+    #[inline(always)]
     pub fn insert(&mut self, key: u64, val: u32) -> Option<u32> {
         let h = mix(key);
         let t = tag_of(h);
@@ -131,7 +131,7 @@ impl OrderMap {
     }
 
     /// Remove; returns the value if present.
-    #[inline]
+    #[inline(always)]
     pub fn remove(&mut self, key: u64) -> Option<u32> {
         let i = self.find(key)?;
         let val = self.entries[i].val;
