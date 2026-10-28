@@ -6,9 +6,10 @@
 [![license](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 
 Deterministic, zero-allocation FIFO limit order book and matching engine core —
-measured at up to **~94M orders/sec** on one core (cache-resident book, batched) and
-**110M+ orders/sec** aggregate across 8 shards on a mixed workload. One core on a
-100k-order book is ~25M, on 1M orders ~13M (see `spec/BENCH.md`).
+measured at up to **~115M orders/sec** on one core (cache-resident book, batched; the
+default safe-code build does the same) and **120M orders/sec** aggregate across 8 shards
+on a mixed workload. One core on the mixed workload with a 100k-order book is ~46M, on
+a 100k-order W5 book ~27M, on 1M orders ~14M (see `spec/BENCH.md`).
 
 Single-writer book per symbol, commands in, monotonically sequenced events out —
 the same shape as real exchange matchers (CME Globex, Nasdaq INET). All I/O

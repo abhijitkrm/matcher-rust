@@ -9,9 +9,13 @@
   (the crate's only `unsafe`, one audited hint helper) for the look-ahead
   pipeline once a book outgrows cache.
 - `matcher_bench --mode latency|throughput|scale` (BENCH.md v2).
-- Throughput, Apple M1: 94M ops/s on one core (1k live orders), 25M at
-  100k live, 13M at 1M live; 110M ops/s aggregate on the mixed workload
-  across 8 shards. See `../matcher/docs/RESULTS.md`.
+- The hot path is `#[inline(always)]` (apply, new_order, cancel, replace,
+  rest, cross, emit, reject and the store / order-map / price-index
+  operations): LLVM left them out of line even with fat LTO. W5 1k
+  92.6M -> 115M ops/s, W4 +10%, other workloads +6-11%.
+- Throughput, Apple M1: 115M ops/s on one core (1k live orders), 46M on the
+  mixed workload, 27M at 100k live, 14M at 1M live; 120M ops/s aggregate on
+  the mixed workload across 8 shards. See `../matcher/docs/RESULTS.md`.
 
 ## v0.2.0 — 2026-10-10
 
