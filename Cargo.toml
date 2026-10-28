@@ -3,7 +3,7 @@ name = "matcher"
 version = "0.2.0"
 edition = "2021"
 rust-version = "1.74"
-description = "Deterministic, zero-allocation FIFO limit order book and matching engine core — up to ~19M orders/sec"
+description = "Deterministic, zero-allocation FIFO limit order book and matching engine core — up to ~94M orders/sec per core, 110M+ across 8 shards"
 license = "MIT OR Apache-2.0"
 keywords = ["matching-engine", "order-book", "exchange", "lob", "hft"]
 categories = ["algorithms", "data-structures"]
@@ -12,6 +12,11 @@ repository = "https://github.com/abhijitkrm/matcher-rust"
 homepage = "https://github.com/abhijitkrm/matcher-rust"
 readme = "README.md"
 exclude = ["/vectors", "/bench"]
+
+[features]
+# Real software prefetch in the `apply_batch` pipeline. Relaxes the crate to
+# `deny(unsafe_code)` with one audited `#[allow(unsafe_code)]` hint helper.
+prefetch = []
 
 [dependencies]
 

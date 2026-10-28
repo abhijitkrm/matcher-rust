@@ -11,8 +11,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::level::Level;
-use crate::pool::NIL;
+use crate::store::{Level, NIL};
 use crate::types::{Price, Qty, Side};
 
 pub enum PriceIndex {
@@ -53,6 +52,16 @@ impl PriceIndex {
         match self {
             PriceIndex::Ladder(l) => l.level(price),
             PriceIndex::Tree(t) => t.map.get(&price),
+        }
+    }
+
+    /// Raw ladder slot at `price` (empty or not; `None` out of range or for
+    /// the tree index). Prefetch look-ahead only.
+    #[inline(always)]
+    pub fn peek(&self, price: Price) -> Option<&Level> {
+        match self {
+            PriceIndex::Ladder(l) => l.levels.get(price.wrapping_sub(l.base) as usize),
+            PriceIndex::Tree(_) => None,
         }
     }
 

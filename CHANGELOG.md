@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- New hot-path layout (`../matcher/docs/LAYOUT.md`): resting orders live
+  inline in 128-byte per-level chunks instead of a pooled record with
+  prev/next links; `OrderMap` gets a 1-byte tag array.
+- `OrderBook::apply_batch()` and `prefault()`; optional `prefetch` feature
+  (the crate's only `unsafe`, one audited hint helper) for the look-ahead
+  pipeline once a book outgrows cache.
+- `matcher_bench --mode latency|throughput|scale` (BENCH.md v2).
+- Throughput, Apple M1: 94M ops/s on one core (1k live orders), 25M at
+  100k live, 13M at 1M live; 110M ops/s aggregate on the mixed workload
+  across 8 shards. See `../matcher/docs/RESULTS.md`.
+
 ## v0.2.0 — 2026-10-10
 
 - Journals and snapshots (`spec/JOURNAL.md`): command/event journal,
