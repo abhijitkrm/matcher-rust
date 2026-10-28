@@ -582,6 +582,15 @@ impl OrderBook {
         self.asks.best_price()
     }
 
+    /// Total resting quantity at exactly `price` on `side` (0 if no level).
+    pub fn level_total(&self, side: Side, price: Price) -> Qty {
+        let idx = match side {
+            Side::Bid => &self.bids,
+            Side::Ask => &self.asks,
+        };
+        idx.level(price).map_or(0, |l| l.total)
+    }
+
     pub fn order(&self, order_id: OrderId) -> Option<OrderInfo> {
         self.map.get(order_id).map(|loc| {
             let ch = self.store.chunk(loc);
